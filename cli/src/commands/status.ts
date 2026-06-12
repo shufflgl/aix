@@ -1,15 +1,13 @@
 import { readState } from "../core/state.js";
+import { printResponse } from "../core/output.js";
 
-export async function statusCommand(): Promise<void> {
+export async function statusCommand(options: { json?: boolean } = {}): Promise<void> {
   const state = await readState();
-  if (Object.keys(state.installed).length === 0) {
-    console.log("No aix-managed extensions installed.");
-    return;
-  }
-  console.log("Extension\tTarget\tVersion\tPath\tInstalled At");
-  for (const [extensionId, targets] of Object.entries(state.installed)) {
-    for (const [target, entry] of Object.entries(targets)) {
-      console.log([extensionId, target, entry.version, entry.installedPath, entry.installedAt].join("\t"));
-    }
-  }
+  const installed = Object.entries(state.installed).flatMap(([extensionId, targets]) =>
+    Object.entries(targets).map(([target, entry]) => ({ extensionId, target, ...entry }))
+  );
+  const text = installed.length === 0
+    ? "No aix-managed extensions installed."
+    : ["Extension\tTarget\tVersion\tPath\tInstalled At", ...installed.map((entry) => [entry.extensionId, entry.target, entry.version, entry.installedPath, entry.installedAt].join("\t"))].join("\n");
+  printResponse({ ok: true, data: { installed } }, options.json, text);
 }

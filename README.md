@@ -2,6 +2,22 @@
 
 `aix` is an AI Extensions Manager for maintaining shared MCP servers, skills, and platform adapters across Codex, Claude Code, and Claude Desktop.
 
+
+## Agent Quickstart
+
+`aix` is designed to be called by Codex or Claude Code as a deterministic CLI. Agents should prefer JSON output and dry-runs before mutating system state.
+
+```bash
+npm install
+npm run build
+node cli/dist/index.js ext list --json
+node cli/dist/index.js ext install gpt-image-2 --target codex --dry-run --json
+node cli/dist/index.js ext install gpt-image-2 --target codex --json
+node cli/dist/index.js ext doctor gpt-image-2 --target codex --json
+```
+
+See `AGENTS.md` and `CLAUDE.md` for agent-specific operating instructions.
+
 ## Repository Layout
 
 ```text
@@ -30,10 +46,10 @@ The current implementation supports:
 ```bash
 npm install
 npm run build
-node cli/dist/index.js list
-node cli/dist/index.js doctor gpt-image-2 --target codex
-node cli/dist/index.js build gpt-image-2 --all
-node cli/dist/index.js install gpt-image-2 --target codex
+node cli/dist/index.js ext list
+node cli/dist/index.js ext doctor gpt-image-2 --target codex
+node cli/dist/index.js ext build gpt-image-2 --all
+node cli/dist/index.js ext install gpt-image-2 --target codex
 node cli/dist/index.js status
 ```
 

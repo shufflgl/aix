@@ -1,11 +1,15 @@
 import fs from "fs-extra";
+import { printResponse } from "../core/output.js";
 import { defaultWorkspaceConfig, loadWorkspaceConfig, workspaceConfigPath, writeWorkspaceConfig } from "../core/workspace-config.js";
 
 export async function initCommand(options: Record<string, string | boolean | undefined>): Promise<void> {
   const file = workspaceConfigPath();
   if ((await fs.pathExists(file)) && !options.force) {
-    console.log(`Workspace config already exists: ${file}`);
-    console.log("Use --force to overwrite it.");
+    printResponse({
+      ok: true,
+      data: { path: file, existed: true },
+      nextActions: [{ description: "Overwrite existing workspace config", command: "aix init --force" }]
+    }, Boolean(options.json), `Workspace config already exists: ${file}\nUse --force to overwrite it.`);
     return;
   }
 
@@ -30,11 +34,8 @@ export async function initCommand(options: Record<string, string | boolean | und
   };
 
   await writeWorkspaceConfig(config);
-  console.log(`Wrote workspace config: ${file}`);
-  if (!options.yes) {
-    const loaded = await loadWorkspaceConfig();
-    console.log(JSON.stringify(loaded, null, 2));
-  }
+  const loaded = await loadWorkspaceConfig();
+  printResponse({ ok: true, data: { path: file, config: loaded } }, Boolean(options.json), options.yes ? `Wrote workspace config: ${file}` : `Wrote workspace config: ${file}\n${JSON.stringify(loaded, null, 2)}`);
 }
 
 function stringOption(value: unknown, fallback?: string): string {

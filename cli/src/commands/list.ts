@@ -1,15 +1,20 @@
 import { loadAllManifests } from "../core/manifest.js";
+import { printResponse } from "../core/output.js";
 
-export async function listCommand(): Promise<void> {
+export async function listCommand(options: { json?: boolean } = {}): Promise<void> {
   const manifests = await loadAllManifests();
-  console.log("ID\tVersion\tCodex\tClaude Code\tClaude Desktop");
-  for (const manifest of manifests) {
-    console.log([
-      manifest.id,
-      manifest.version,
-      manifest.targets.codex?.enabled ? "yes" : "no",
-      manifest.targets.claudeCode?.enabled ? "yes" : "no",
-      manifest.targets.claudeDesktop?.enabled ? "yes" : "no"
-    ].join("\t"));
-  }
+  const rows = manifests.map((manifest) => ({
+    id: manifest.id,
+    name: manifest.name,
+    version: manifest.version,
+    targets: {
+      codex: Boolean(manifest.targets.codex?.enabled),
+      claudeCode: Boolean(manifest.targets.claudeCode?.enabled),
+      claudeDesktop: Boolean(manifest.targets.claudeDesktop?.enabled)
+    }
+  }));
+  printResponse({ ok: true, data: { extensions: rows } }, options.json, [
+    "ID\tVersion\tCodex\tClaude Code\tClaude Desktop",
+    ...rows.map((row) => [row.id, row.version, row.targets.codex ? "yes" : "no", row.targets.claudeCode ? "yes" : "no", row.targets.claudeDesktop ? "yes" : "no"].join("\t"))
+  ].join("\n"));
 }
