@@ -58,6 +58,10 @@ env:
     required: false
     default: "300000"
 
+assets:
+  logo: assets/gpt-image-2/logo.png
+  icon: assets/gpt-image-2/icon.png
+
 targets:
   codex:
     enabled: true

@@ -31,6 +31,10 @@ const ManifestSchema = z.object({
     tools: z.array(z.string()).optional().default([])
   }),
   skills: z.array(z.string()).optional().default([]),
+  assets: z.object({
+    logo: z.string().optional(),
+    icon: z.string().optional()
+  }).optional().default({}),
   env: z.record(EnvVarSchema).optional().default({}),
   targets: z.record(z.any()).optional().default({})
 });

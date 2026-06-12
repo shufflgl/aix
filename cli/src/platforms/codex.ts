@@ -17,6 +17,7 @@ export async function buildCodexPlugin(manifest: ExtensionManifest): Promise<str
   await fs.ensureDir(path.join(platformPlugin, ".codex-plugin"));
   await fs.ensureDir(path.join(platformPlugin, "scripts"));
   await copySkills(manifest, path.join(platformPlugin, "skills"));
+  await copyCodexAssets(manifest, platformPlugin);
 
   await fs.writeJson(path.join(platformPlugin, ".codex-plugin", "plugin.json"), codexPluginJson(manifest), { spaces: 2 });
   await fs.writeJson(path.join(platformPlugin, ".mcp.json"), codexMcpJson(manifest), { spaces: 2 });
@@ -66,6 +67,20 @@ export async function codexDoctor(manifest: ExtensionManifest): Promise<string[]
   messages.push((await fs.pathExists(codexLocalPluginPath(manifest.id))) ? "ok: Codex local plugin installed" : "missing: Codex local plugin");
   messages.push((await fs.pathExists(personalMarketplacePath())) ? "ok: personal marketplace found" : "missing: personal marketplace");
   return messages;
+}
+
+
+async function copyCodexAssets(manifest: ExtensionManifest, platformPlugin: string): Promise<void> {
+  const root = workspaceRoot();
+  const assetsDir = path.join(platformPlugin, "assets");
+  if (manifest.assets.logo) {
+    await fs.ensureDir(assetsDir);
+    await fs.copy(path.join(root, manifest.assets.logo), path.join(assetsDir, "logo.png"));
+  }
+  if (manifest.assets.icon) {
+    await fs.ensureDir(assetsDir);
+    await fs.copy(path.join(root, manifest.assets.icon), path.join(assetsDir, "icon.png"));
+  }
 }
 
 async function updatePersonalMarketplace(manifest: ExtensionManifest, installPath: string): Promise<void> {
@@ -131,6 +146,8 @@ function codexPluginJson(manifest: ExtensionManifest) {
       category: manifest.category,
       capabilities: ["MCP", "Skill"],
       websiteURL: manifest.homepage,
+      composerIcon: manifest.assets.icon ? "./assets/icon.png" : undefined,
+      logo: manifest.assets.logo ? "./assets/logo.png" : undefined,
       defaultPrompt: [`Use ${manifest.name}.`],
       brandColor: "#7C3AED"
     }
