@@ -174,8 +174,13 @@ Publishing is automated by `.github/workflows/publish-npm.yml` and runs when a G
 
 Repository setup required once:
 
-1. Create an npm automation token or configure npm trusted publishing.
-2. Add the token as GitHub Actions secret `NPM_TOKEN` if using token-based publishing.
+1. Create or claim the npm package `@shufflgl/aix`.
+2. In npm package settings, add a trusted publisher:
+   - Provider: GitHub Actions
+   - Repository: `shufflgl/aix`
+   - Workflow: `publish-npm.yml`
+   - Environment: leave empty unless the workflow later uses a GitHub environment
+3. No `NPM_TOKEN` GitHub secret is needed for trusted publishing.
 
 Release flow:
 
@@ -186,7 +191,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-The workflow runs typecheck, build, package dry-run, and `npm publish --workspace cli --access public --provenance`.
+The workflow runs typecheck, build, package dry-run, and `npm publish --workspace cli --access public --provenance` using npm trusted publishing.
 
 It also creates a GitHub Release containing:
 

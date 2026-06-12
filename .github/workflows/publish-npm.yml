@@ -36,10 +36,8 @@ jobs:
       - name: Verify npm package contents
         run: npm --workspace cli pack --dry-run
 
-      - name: Publish CLI to npm
+      - name: Publish CLI to npm with trusted publishing
         run: npm publish --workspace cli --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Build Claude Desktop release artifacts
         run: |
