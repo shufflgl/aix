@@ -1,0 +1,28 @@
+project:
+  name: aix
+  description: AI Extensions Manager for Codex and Claude extension assets
+  homepage: https://github.com/shufflgl/aix
+  repository: https://github.com/shufflgl/aix
+  license: MIT
+
+publisher:
+  name: shufflgl
+  displayName: shufflgl
+  email: hi@lglgl.me
+  url: https://github.com/shufflgl
+
+defaults:
+  category: Productivity
+  brandColor: "#7C3AED"
+
+platforms:
+  codex:
+    marketplace: personal
+    developerName: shufflgl
+  claudeCode:
+    author: shufflgl
+  claudeDesktop:
+    author:
+      name: shufflgl
+      email: hi@lglgl.me
+      url: https://github.com/shufflgl

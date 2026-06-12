@@ -126,12 +126,21 @@ function toHomeRelativePath(absolutePath: string): string {
   return relative.startsWith("..") ? absolutePath : `./${relative}`;
 }
 
+
+function authorObject(manifest: ExtensionManifest) {
+  return {
+    name: manifest.metadata.publisher.name,
+    email: manifest.metadata.publisher.email,
+    url: manifest.metadata.publisher.url
+  };
+}
+
 function codexPluginJson(manifest: ExtensionManifest) {
   return {
     name: manifest.id,
     version: `${manifest.version}+codex.${timestamp()}`,
     description: manifest.description,
-    author: { name: "Local developer" },
+    author: authorObject(manifest),
     homepage: manifest.homepage,
     repository: manifest.repository,
     license: manifest.license,
@@ -142,14 +151,14 @@ function codexPluginJson(manifest: ExtensionManifest) {
       displayName: manifest.name,
       shortDescription: manifest.description,
       longDescription: `${manifest.name} is managed by aix and wraps a shared MCP server for Codex.`,
-      developerName: "Local developer",
+      developerName: manifest.metadata.platforms.codex.developerName ?? manifest.metadata.publisher.displayName ?? manifest.metadata.publisher.name,
       category: manifest.category,
       capabilities: ["MCP", "Skill"],
       websiteURL: manifest.homepage,
       composerIcon: manifest.assets.icon ? "./assets/icon.png" : undefined,
       logo: manifest.assets.logo ? "./assets/logo.png" : undefined,
       defaultPrompt: [`Use ${manifest.name}.`],
-      brandColor: "#7C3AED"
+      brandColor: manifest.metadata.defaults.brandColor
     }
   };
 }

@@ -67,13 +67,22 @@ export async function removeClaudeDesktopExtension(extensionId: string): Promise
   await removeInstalled(extensionId, "claude-desktop");
 }
 
+
+function desktopAuthor(manifest: ExtensionManifest) {
+  return {
+    name: manifest.metadata.platforms.claudeDesktop.author.name ?? manifest.metadata.publisher.name,
+    email: manifest.metadata.platforms.claudeDesktop.author.email ?? manifest.metadata.publisher.email,
+    url: manifest.metadata.platforms.claudeDesktop.author.url ?? manifest.metadata.publisher.url
+  };
+}
+
 function desktopManifest(manifest: ExtensionManifest) {
   return {
     manifest_version: "0.2",
     name: manifest.id,
     version: `${manifest.version}+desktop.${timestamp()}`,
     description: manifest.description,
-    author: { name: "Local developer" },
+    author: desktopAuthor(manifest),
     server: {
       type: "node",
       entry_point: `scripts/start-${manifest.id}.mjs`,

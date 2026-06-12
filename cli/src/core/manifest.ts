@@ -3,6 +3,7 @@ import path from "node:path";
 import YAML from "yaml";
 import { z } from "zod";
 import { workspaceRoot } from "./paths.js";
+import { loadWorkspaceConfig, WorkspaceConfig } from "./workspace-config.js";
 
 const EnvVarSchema = z.object({
   required: z.boolean().optional().default(false),
@@ -39,7 +40,15 @@ const ManifestSchema = z.object({
   targets: z.record(z.any()).optional().default({})
 });
 
-export type ExtensionManifest = z.infer<typeof ManifestSchema>;
+export type RawExtensionManifest = z.infer<typeof ManifestSchema>;
+export type ExtensionManifest = RawExtensionManifest & {
+  metadata: {
+    project: WorkspaceConfig["project"];
+    publisher: WorkspaceConfig["publisher"];
+    defaults: WorkspaceConfig["defaults"];
+    platforms: WorkspaceConfig["platforms"];
+  };
+};
 
 export async function loadManifest(extensionId: string): Promise<ExtensionManifest> {
   const manifestPath = path.join(workspaceRoot(), "manifests", `${extensionId}.yaml`);
@@ -47,7 +56,7 @@ export async function loadManifest(extensionId: string): Promise<ExtensionManife
     throw new Error(`Manifest not found: ${manifestPath}`);
   }
   const raw = await fs.readFile(manifestPath, "utf8");
-  return ManifestSchema.parse(YAML.parse(raw));
+  return enrichManifest(ManifestSchema.parse(YAML.parse(raw)));
 }
 
 export async function loadAllManifests(): Promise<ExtensionManifest[]> {
@@ -56,7 +65,25 @@ export async function loadAllManifests(): Promise<ExtensionManifest[]> {
   const manifests: ExtensionManifest[] = [];
   for (const file of files.sort()) {
     const raw = await fs.readFile(path.join(manifestDir, file), "utf8");
-    manifests.push(ManifestSchema.parse(YAML.parse(raw)));
+    manifests.push(await enrichManifest(ManifestSchema.parse(YAML.parse(raw))));
   }
   return manifests;
+}
+
+
+async function enrichManifest(manifest: RawExtensionManifest): Promise<ExtensionManifest> {
+  const config = await loadWorkspaceConfig();
+  return {
+    ...manifest,
+    category: manifest.category || config.defaults.category,
+    homepage: manifest.homepage || config.project.homepage,
+    repository: manifest.repository || config.project.repository,
+    license: manifest.license || config.project.license,
+    metadata: {
+      project: config.project,
+      publisher: config.publisher,
+      defaults: config.defaults,
+      platforms: config.platforms
+    }
+  };
 }

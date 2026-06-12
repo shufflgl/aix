@@ -6,6 +6,8 @@ import { installCommand } from "./commands/install.js";
 import { statusCommand } from "./commands/status.js";
 import { doctorCommand } from "./commands/doctor.js";
 import { removeCommand } from "./commands/remove.js";
+import { initCommand } from "./commands/init.js";
+import { configCommand } from "./commands/config.js";
 
 const program = new Command();
 
@@ -13,6 +15,31 @@ program
   .name("aix")
   .description("AI Extensions Manager")
   .version("0.1.0");
+
+
+program.command("init")
+  .description("Initialize or rewrite aix workspace metadata")
+  .option("--yes", "print less output")
+  .option("--force", "overwrite existing aix.yaml")
+  .option("--project-name <name>")
+  .option("--project-description <description>")
+  .option("--homepage <url>")
+  .option("--repository <url>")
+  .option("--license <license>")
+  .option("--publisher-name <name>")
+  .option("--publisher-display-name <name>")
+  .option("--publisher-email <email>")
+  .option("--publisher-url <url>")
+  .option("--category <category>")
+  .option("--brand-color <hex>")
+  .action((options) => wrap(() => initCommand(options))());
+
+program.command("config")
+  .argument("[action]", "show|get|set", "show")
+  .argument("[key]")
+  .argument("[value]")
+  .description("Show or edit aix workspace metadata")
+  .action((action, key, value) => wrap(() => configCommand(action, key, value))());
 
 program.command("list")
   .description("List available extensions")

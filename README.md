@@ -47,6 +47,26 @@ aix build gpt-image-2 --target claude-desktop
 aix build gpt-image-2 --target claude-connector
 ```
 
+
+## Workspace Metadata
+
+Workspace-level metadata lives in `aix.yaml` and is inherited by generated platform adapters.
+
+```bash
+node cli/dist/index.js init --force \
+  --project-name aix \
+  --publisher-name shufflgl \
+  --publisher-email hi@lglgl.me \
+  --publisher-url https://github.com/shufflgl \
+  --repository https://github.com/shufflgl/aix
+
+node cli/dist/index.js config show
+node cli/dist/index.js config get publisher.email
+node cli/dist/index.js config set defaults.brandColor '#7C3AED'
+```
+
+Merge precedence is platform-specific fields, then extension manifest fields, then `aix.yaml` defaults.
+
 ## Codex Install Target
 
 The Codex adapter installs generated plugins to:

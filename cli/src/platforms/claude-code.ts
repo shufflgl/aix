@@ -51,12 +51,21 @@ export async function removeClaudeCodePlugin(extensionId: string): Promise<void>
   await removeInstalled(extensionId, "claude-code");
 }
 
+
+function authorObject(manifest: ExtensionManifest) {
+  return {
+    name: manifest.metadata.platforms.claudeCode.author ?? manifest.metadata.publisher.name,
+    email: manifest.metadata.publisher.email,
+    url: manifest.metadata.publisher.url
+  };
+}
+
 function claudeCodePluginJson(manifest: ExtensionManifest) {
   return {
     name: manifest.id,
     version: `${manifest.version}+claude-code.${timestamp()}`,
     description: manifest.description,
-    author: { name: "Local developer" },
+    author: authorObject(manifest),
     homepage: manifest.homepage,
     repository: manifest.repository,
     license: manifest.license,
