@@ -1,0 +1,76 @@
+id: gpt-image-2
+name: GPT Image 2
+version: 0.1.0
+description: Generate and refine images through GPT Image 2.
+category: Productivity
+homepage: https://github.com/shufflgl/mcp/tree/main/gpt-image-2
+repository: https://github.com/shufflgl/mcp
+license: MIT
+
+mcp:
+  id: gpt-image-2
+  path: mcp/gpt-image-2
+  type: stdio
+  runtime: node
+  command: node
+  args:
+    - dist/index.js
+  build:
+    - npm ci
+    - npm run build
+  tools:
+    - generate_image
+    - rewrite_image_prompt
+    - list_image_styles
+    - list_director_modes
+    - analyze_image_gap
+    - generate_image_with_reference
+
+skills:
+  - image-generation
+
+env:
+  OPENAI_API_KEY:
+    required: true
+    secret: true
+    description: API key for OpenAI-compatible gateway.
+  OPENAI_BASE_URL:
+    required: true
+    default: https://api.openai.com/v1
+    description: OpenAI-compatible API base URL.
+  IMAGE_MODEL:
+    required: false
+    default: gpt-image-2
+  TEXT_MODEL:
+    required: false
+  VISION_MODEL:
+    required: false
+  IMAGE_QUALITY:
+    required: false
+    default: high
+  IMAGE_OUTPUT_FORMAT:
+    required: false
+    default: png
+  IMAGE_OUTPUT_DIR:
+    required: false
+    default: ./outputs
+  OPENAI_TIMEOUT_MS:
+    required: false
+    default: "300000"
+
+targets:
+  codex:
+    enabled: true
+    plugin: true
+    marketplace: personal
+    installPath: ~/.codex/plugins/local/gpt-image-2
+    marketplacePath: ~/.agents/plugins/marketplace.json
+  claudeCode:
+    enabled: true
+    plugin: true
+    installPath: ~/.claude/plugins/local/gpt-image-2
+  claudeDesktop:
+    enabled: true
+    extension: true
+    connector: true
+    extensionPath: ~/Library/Application Support/Claude/Extensions/gpt-image-2

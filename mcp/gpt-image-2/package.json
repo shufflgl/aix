@@ -1,0 +1,39 @@
+{
+  "name": "gpt-img-gen",
+  "version": "0.1.1",
+  "private": true,
+  "description": "MCP server for high-quality image generation through OpenAI-compatible gateways.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "gpt-img-gen": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "scripts",
+    "README.md",
+    ".env.example"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "mcp:config": "node scripts/print-mcp-config.mjs",
+    "pack:local": "npm pack",
+    "prepack": "npm run build",
+    "test": "npm run build && node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

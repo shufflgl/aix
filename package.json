@@ -1,0 +1,11 @@
+{
+  "name": "aix-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["cli"],
+  "scripts": {
+    "build": "npm --workspace cli run build",
+    "typecheck": "npm --workspace cli run typecheck",
+    "aix": "node cli/dist/index.js"
+  }
+}

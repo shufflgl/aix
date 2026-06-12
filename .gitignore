@@ -1,0 +1,16 @@
+node_modules/
+dist/
+cli/dist/
+
+platforms/codex/plugins/*
+platforms/claude-code/plugins/*
+platforms/claude-desktop/extensions/*
+platforms/claude-desktop/connectors/*
+!platforms/codex/plugins/.gitkeep
+!platforms/claude-code/plugins/.gitkeep
+!platforms/claude-desktop/extensions/.gitkeep
+!platforms/claude-desktop/connectors/.gitkeep
+
+.env
+*.local.env
+.DS_Store
