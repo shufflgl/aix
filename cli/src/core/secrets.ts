@@ -61,12 +61,12 @@ export async function getKeychainSecret(extensionId: string, key: string): Promi
 }
 
 export async function checkSecrets(manifest: ExtensionManifest, backend: SecretBackend): Promise<Array<{ key: string; status: string }>> {
+  if (backend === "env") {
+    return checkSecretsFromValues(manifest, await readEnvFile(envSecretPath(manifest.id)));
+  }
   const rows: Array<{ key: string; status: string }> = [];
   for (const [key, spec] of Object.entries(manifest.env)) {
-    if (backend === "env") {
-      const values = await readEnvFile(envSecretPath(manifest.id));
-      rows.push({ key, status: values[key] ? "set" : spec.required ? "missing" : spec.default !== undefined ? "default" : "optional" });
-    } else if (backend === "keychain") {
+    if (backend === "keychain") {
       const value = await getKeychainSecret(manifest.id, key);
       rows.push({ key, status: value ? "set" : spec.required ? "missing" : spec.default !== undefined ? "default" : "optional" });
     } else {
@@ -75,6 +75,18 @@ export async function checkSecrets(manifest: ExtensionManifest, backend: SecretB
       const hasRef = Boolean(values[key]);
       rows.push({ key, status: !opAvailable ? "op-missing" : hasRef ? "ref" : spec.required ? "missing" : "optional" });
     }
+  }
+  return rows;
+}
+
+export async function checkLocalEnvSecrets(manifest: ExtensionManifest, localEnvPath: string): Promise<Array<{ key: string; status: string }>> {
+  return checkSecretsFromValues(manifest, await readEnvFile(localEnvPath));
+}
+
+function checkSecretsFromValues(manifest: ExtensionManifest, values: Record<string, string>): Array<{ key: string; status: string }> {
+  const rows: Array<{ key: string; status: string }> = [];
+  for (const [key, spec] of Object.entries(manifest.env)) {
+    rows.push({ key, status: values[key] ? "set" : spec.required ? "missing" : spec.default !== undefined ? "default" : "optional" });
   }
   return rows;
 }

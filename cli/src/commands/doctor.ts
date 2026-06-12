@@ -2,13 +2,14 @@ import fs from "fs-extra";
 import path from "node:path";
 import { commandExists } from "../utils/shell.js";
 import { loadManifest } from "../core/manifest.js";
-import { workspaceRoot } from "../core/paths.js";
+import { codexLocalPluginPath, workspaceRoot } from "../core/paths.js";
 import { codexDoctor } from "../platforms/codex.js";
 import { claudeCodeLocalPluginPath } from "../platforms/claude-code.js";
 import { AixIssue, printResponse } from "../core/output.js";
-import { checkSecrets } from "../core/secrets.js";
+import { checkLocalEnvSecrets, checkSecrets, envSecretPath } from "../core/secrets.js";
 
 interface CheckRow { name: string; ok: boolean; message: string; }
+interface SecretRow { key: string; status: string; }
 
 export async function doctorCommand(extensionId = "gpt-image-2", options: { target?: string; json?: boolean } = {}): Promise<void> {
   const target = options.target ?? "codex";
@@ -28,20 +29,50 @@ export async function doctorCommand(extensionId = "gpt-image-2", options: { targ
     ];
   } else throw new Error(`Unsupported doctor target: ${target}`);
 
-  const secretRows = await checkSecrets(manifest, "env");
+  const localEnvPath = target === "codex" ? path.join(codexLocalPluginPath(manifest.id), ".env") : "";
+  const localSecretRows = localEnvPath ? await checkLocalEnvSecrets(manifest, localEnvPath) : [];
+  const sharedSecretFile = envSecretPath(manifest.id);
+  const hasSharedSecretFile = await fs.pathExists(sharedSecretFile);
+  const sharedSecretRows = hasSharedSecretFile ? await checkSecrets(manifest, "env") : [];
+  const effectiveSecretRows = mergeSecretRows(localSecretRows, sharedSecretRows);
+
   const issues: AixIssue[] = [
     ...checks.filter((check) => !check.ok).map((check) => ({ code: `missing_${check.name}`, severity: "warning" as const, message: check.message })),
-    ...secretRows.filter((row) => row.status === "missing").map((row) => ({
+    ...effectiveSecretRows.filter((row) => row.status === "missing").map((row) => ({
       code: "missing_secret",
-      severity: "error" as const,
-      message: `${row.key} is missing for ${manifest.id}`,
+      severity: "warning" as const,
+      message: `${row.key} is not configured for ${manifest.id}. Standalone users can fill the plugin-local .env; aix-managed users can run aix secret init/edit.`,
       fixCommand: `aix secret init ${manifest.id} --backend env && aix secret edit ${manifest.id} --backend env`
     }))
   ];
 
   const ok = issues.every((issue) => issue.severity !== "error");
-  const text = [...checks.map((check) => `${check.ok ? "ok" : "missing"}: ${check.message}`), ...secretRows.map((row) => `secret:${row.key}\t${row.status}`)].join("\n");
-  printResponse({ ok, data: { extension: manifest.id, target, checks, secrets: secretRows }, issues }, options.json, text);
+  const text = [
+    ...checks.map((check) => `${check.ok ? "ok" : "missing"}: ${check.message}`),
+    ...effectiveSecretRows.map((row) => `secret:${row.key}\t${row.status}`),
+    hasSharedSecretFile ? `aix shared secrets: ${sharedSecretFile}` : "aix shared secrets: not configured (optional)"
+  ].join("\n");
+  printResponse({
+    ok,
+    data: {
+      extension: manifest.id,
+      target,
+      checks,
+      secrets: effectiveSecretRows,
+      localEnvPath,
+      sharedSecretFile: hasSharedSecretFile ? sharedSecretFile : undefined
+    },
+    issues
+  }, options.json, text);
+}
+
+function mergeSecretRows(localRows: SecretRow[], sharedRows: SecretRow[]): SecretRow[] {
+  if (localRows.length === 0) return sharedRows;
+  const shared = new Map(sharedRows.map((row) => [row.key, row.status]));
+  return localRows.map((row) => {
+    if (row.status === "missing" && shared.get(row.key) === "set") return { key: row.key, status: "set" };
+    return row;
+  });
 }
 
 function parseLegacyCheck(message: string): CheckRow {

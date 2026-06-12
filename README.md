@@ -86,13 +86,15 @@ Merge precedence is platform-specific fields, then extension manifest fields, th
 
 ## Secret Backends
 
-`aix` supports three local secret backends for ext credentials:
+`aix` supports three optional secret backends for aix-managed ext credentials:
 
 - `.env` files under `~/.aix/secrets/<ext-id>.env`
 - macOS Keychain entries under service `aix:<ext-id>`
 - 1Password reference files under `~/.aix/secrets/<ext-id>.1password.env`
 
-Initialize a shared `.env` secret file:
+`~/.aix/secrets` is an optional shared store. Generated plugin launchers never create `~/.aix`, `~/.aix/secrets`, or secret files. Those paths are created only when the user explicitly runs `aix secret ...`.
+
+For standalone plugin use, configure the plugin-local `.env` file in the platform install directory. For aix-managed use, initialize a shared secret backend:
 
 ```bash
 node cli/dist/index.js secret init gpt-image-2 --backend env
@@ -114,16 +116,16 @@ node cli/dist/index.js secret init gpt-image-2 --backend 1password
 node cli/dist/index.js secret check gpt-image-2 --backend 1password
 ```
 
-Generated MCP launchers load secrets in this order:
+Generated MCP launchers read existing configuration only, in this order:
 
 ```text
-~/.aix/secrets/<ext-id>.env
-~/.aix/secrets/<ext-id>.1password.env
-macOS Keychain service aix:<ext-id>
 platform install directory .env
+~/.aix/secrets/<ext-id>.env, if it already exists
+~/.aix/secrets/<ext-id>.1password.env, if it already exists
+macOS Keychain service aix:<ext-id>
 ```
 
-The platform install directory `.env` is loaded last and can override shared values.
+Existing process environment variables still win because launchers do not overwrite already-set variables.
 
 ## Codex Install Target
 

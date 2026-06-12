@@ -56,10 +56,10 @@ const sharedEnvPath = extensionId ? join(homedir(), ".aix", "secrets", extension
 const onePasswordEnvPath = extensionId ? join(homedir(), ".aix", "secrets", extensionId + ".1password.env") : "";
 const serverEntry = join(packageRoot, "server", "dist", "index.js");
 
+loadEnvFile(localEnvPath, false);
 loadEnvFile(sharedEnvPath, false);
 loadOnePasswordRefs(onePasswordEnvPath);
 loadKeychainSecrets(extensionId);
-loadEnvFile(localEnvPath, true);
 
 if (!existsSync(serverEntry)) {
   console.error(\`Missing MCP server build at \${serverEntry}.\`);
@@ -69,6 +69,7 @@ if (!existsSync(serverEntry)) {
 await import(serverEntry);
 
 function loadEnvFile(filePath, override) {
+  // Read-only: standalone plugins must not create ~/.aix or any secret files.
   if (!filePath || !existsSync(filePath)) return;
   const contents = readFileSync(filePath, "utf8");
   for (const rawLine of contents.split(/\\r?\\n/)) {
@@ -83,6 +84,7 @@ function loadEnvFile(filePath, override) {
 }
 
 function loadOnePasswordRefs(filePath) {
+  // Read-only: only use aix-managed 1Password refs when the file already exists.
   if (!filePath || !existsSync(filePath)) return;
   try {
     execFileSync("op", ["--version"], { stdio: "ignore" });
@@ -107,6 +109,7 @@ function loadOnePasswordRefs(filePath) {
 }
 
 function loadKeychainSecrets(extId) {
+  // Read-only: querying Keychain does not create ~/.aix or plugin-local files.
   if (!extId) return;
   const envKeys = Object.keys(process.env).filter((key) => key.endsWith("_API_KEY") || key.endsWith("_TOKEN"));
   for (const key of new Set([...secretKeys, ...envKeys, "OPENAI_API_KEY", "OPENAI_BASE_URL"])) {
