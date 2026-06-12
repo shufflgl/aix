@@ -67,6 +67,48 @@ node cli/dist/index.js config set defaults.brandColor '#7C3AED'
 
 Merge precedence is platform-specific fields, then extension manifest fields, then `aix.yaml` defaults.
 
+
+## Secret Backends
+
+`aix` supports three local secret backends for ext credentials:
+
+- `.env` files under `~/.aix/secrets/<ext-id>.env`
+- macOS Keychain entries under service `aix:<ext-id>`
+- 1Password reference files under `~/.aix/secrets/<ext-id>.1password.env`
+
+Initialize a shared `.env` secret file:
+
+```bash
+node cli/dist/index.js secret init gpt-image-2 --backend env
+node cli/dist/index.js secret path gpt-image-2 --backend env
+node cli/dist/index.js secret check gpt-image-2 --backend env
+```
+
+Store a value in macOS Keychain:
+
+```bash
+node cli/dist/index.js secret set gpt-image-2 --backend keychain --key OPENAI_API_KEY --value '<key>'
+node cli/dist/index.js secret check gpt-image-2 --backend keychain
+```
+
+Create a 1Password reference template:
+
+```bash
+node cli/dist/index.js secret init gpt-image-2 --backend 1password
+node cli/dist/index.js secret check gpt-image-2 --backend 1password
+```
+
+Generated MCP launchers load secrets in this order:
+
+```text
+~/.aix/secrets/<ext-id>.env
+~/.aix/secrets/<ext-id>.1password.env
+macOS Keychain service aix:<ext-id>
+platform install directory .env
+```
+
+The platform install directory `.env` is loaded last and can override shared values.
+
 ## Codex Install Target
 
 The Codex adapter installs generated plugins to:

@@ -18,7 +18,7 @@ export async function buildClaudeCodePlugin(manifest: ExtensionManifest): Promis
   await copyAndBuildMcp(manifest, path.join(platformPlugin, "server"));
   await copySkills(manifest, path.join(platformPlugin, "skills"));
   await fs.ensureDir(path.join(platformPlugin, "scripts"));
-  await fs.writeFile(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), launcherScript());
+  await fs.writeFile(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), launcherScript(manifest.id, Object.keys(manifest.env)));
   await fs.chmod(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), 0o755);
   await fs.writeJson(path.join(platformPlugin, "plugin.json"), claudeCodePluginJson(manifest), { spaces: 2 });
   await fs.writeJson(path.join(platformPlugin, ".mcp.json"), claudeCodeMcpJson(manifest), { spaces: 2 });

@@ -8,6 +8,7 @@ import { doctorCommand } from "./commands/doctor.js";
 import { removeCommand } from "./commands/remove.js";
 import { initCommand } from "./commands/init.js";
 import { configCommand } from "./commands/config.js";
+import { secretCommand } from "./commands/secret.js";
 
 const program = new Command();
 
@@ -58,6 +59,17 @@ program.command("install")
   .option("--all", "install all supported targets")
   .description("Install an extension")
   .action((extension, options) => wrap(() => installCommand(extension, options))());
+
+
+program.command("secret")
+  .argument("<action>", "init|path|edit|set|check")
+  .argument("<extension>")
+  .option("--backend <backend>", "env|keychain|1password", "env")
+  .option("--force", "overwrite existing secret template")
+  .option("--key <key>")
+  .option("--value <value>")
+  .description("Manage local extension secrets")
+  .action((action, extension, options) => wrap(() => secretCommand(action, extension, options))());
 
 program.command("status")
   .description("Show installed aix-managed extensions")

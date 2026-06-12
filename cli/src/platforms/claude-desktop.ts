@@ -12,7 +12,7 @@ export async function buildClaudeDesktopExtension(manifest: ExtensionManifest): 
   await fs.remove(extensionDir);
   await copyAndBuildMcp(manifest, path.join(extensionDir, "server"));
   await fs.ensureDir(path.join(extensionDir, "scripts"));
-  await fs.writeFile(path.join(extensionDir, "scripts", `start-${manifest.id}.mjs`), launcherScript());
+  await fs.writeFile(path.join(extensionDir, "scripts", `start-${manifest.id}.mjs`), launcherScript(manifest.id, Object.keys(manifest.env)));
   await fs.chmod(path.join(extensionDir, "scripts", `start-${manifest.id}.mjs`), 0o755);
   await fs.writeFile(path.join(extensionDir, ".env.example"), envExample(manifest));
   await fs.writeFile(path.join(extensionDir, ".mcpbignore"), mcpbIgnore());

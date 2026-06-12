@@ -22,7 +22,7 @@ export async function buildCodexPlugin(manifest: ExtensionManifest): Promise<str
   await fs.writeJson(path.join(platformPlugin, ".codex-plugin", "plugin.json"), codexPluginJson(manifest), { spaces: 2 });
   await fs.writeJson(path.join(platformPlugin, ".mcp.json"), codexMcpJson(manifest), { spaces: 2 });
   await fs.writeFile(path.join(platformPlugin, ".env.example"), envExample(manifest));
-  await fs.writeFile(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), launcherScript());
+  await fs.writeFile(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), launcherScript(manifest.id, Object.keys(manifest.env)));
   await fs.chmod(path.join(platformPlugin, "scripts", `start-${manifest.id}.mjs`), 0o755);
   await fs.writeFile(path.join(platformPlugin, "README.md"), readme(manifest));
   return platformPlugin;

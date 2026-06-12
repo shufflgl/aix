@@ -39,29 +39,27 @@ export function defaultNonSecretEnv(manifest: ExtensionManifest): Record<string,
   return env;
 }
 
-export function launcherScript(): string {
+export function launcherScript(extensionId = "", secretKeys: string[] = []): string {
   return `#!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { homedir } from "node:os";
+import { execFileSync } from "node:child_process";
 
+const extensionId = ${JSON.stringify(extensionId)};
+const secretKeys = ${JSON.stringify(secretKeys)};
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const packageRoot = dirname(scriptDir);
-const envPath = join(packageRoot, ".env");
+const localEnvPath = join(packageRoot, ".env");
+const sharedEnvPath = extensionId ? join(homedir(), ".aix", "secrets", extensionId + ".env") : "";
+const onePasswordEnvPath = extensionId ? join(homedir(), ".aix", "secrets", extensionId + ".1password.env") : "";
 const serverEntry = join(packageRoot, "server", "dist", "index.js");
 
-if (existsSync(envPath)) {
-  const contents = readFileSync(envPath, "utf8");
-  for (const rawLine of contents.split(/\\r?\\n/)) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith("#")) continue;
-    const equalsIndex = line.indexOf("=");
-    if (equalsIndex === -1) continue;
-    const key = line.slice(0, equalsIndex).trim();
-    const value = line.slice(equalsIndex + 1).trim().replace(/^[ '\"]|[ '\"]$/g, "");
-    if (key && process.env[key] == null) process.env[key] = value;
-  }
-}
+loadEnvFile(sharedEnvPath, false);
+loadOnePasswordRefs(onePasswordEnvPath);
+loadKeychainSecrets(extensionId);
+loadEnvFile(localEnvPath, true);
 
 if (!existsSync(serverEntry)) {
   console.error(\`Missing MCP server build at \${serverEntry}.\`);
@@ -69,6 +67,58 @@ if (!existsSync(serverEntry)) {
 }
 
 await import(serverEntry);
+
+function loadEnvFile(filePath, override) {
+  if (!filePath || !existsSync(filePath)) return;
+  const contents = readFileSync(filePath, "utf8");
+  for (const rawLine of contents.split(/\\r?\\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const equalsIndex = line.indexOf("=");
+    if (equalsIndex === -1) continue;
+    const key = line.slice(0, equalsIndex).trim();
+    const value = line.slice(equalsIndex + 1).trim().replace(/^[ '\"]|[ '\"]$/g, "");
+    if (key && (override || process.env[key] == null) && value) process.env[key] = value;
+  }
+}
+
+function loadOnePasswordRefs(filePath) {
+  if (!filePath || !existsSync(filePath)) return;
+  try {
+    execFileSync("op", ["--version"], { stdio: "ignore" });
+  } catch {
+    return;
+  }
+  const contents = readFileSync(filePath, "utf8");
+  for (const rawLine of contents.split(/\\r?\\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const equalsIndex = line.indexOf("=");
+    if (equalsIndex === -1) continue;
+    const key = line.slice(0, equalsIndex).trim();
+    const ref = line.slice(equalsIndex + 1).trim();
+    if (!key || !ref.startsWith("op://") || process.env[key] != null) continue;
+    try {
+      process.env[key] = execFileSync("op", ["read", ref], { encoding: "utf8" }).trim();
+    } catch {
+      // Ignore unresolved 1Password refs; the MCP server will report missing required values.
+    }
+  }
+}
+
+function loadKeychainSecrets(extId) {
+  if (!extId) return;
+  const envKeys = Object.keys(process.env).filter((key) => key.endsWith("_API_KEY") || key.endsWith("_TOKEN"));
+  for (const key of new Set([...secretKeys, ...envKeys, "OPENAI_API_KEY", "OPENAI_BASE_URL"])) {
+    if (process.env[key] != null) continue;
+    try {
+      const value = execFileSync("security", ["find-generic-password", "-s", "aix:" + extId, "-a", key, "-w"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+      if (value) process.env[key] = value;
+    } catch {
+      // Ignore missing keychain entries.
+    }
+  }
+}
 `;
 }
 
