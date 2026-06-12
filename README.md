@@ -164,3 +164,26 @@ For `gpt-image-2`, configure credentials in:
 ```text
 ~/.codex/plugins/local/gpt-image-2/.env
 ```
+
+
+## Publishing CLI
+
+The npm package is published from the `cli` workspace as `@shufflgl/aix`.
+
+Publishing is automated by `.github/workflows/publish-npm.yml` and runs when a Git tag matching `v*` is pushed.
+
+Repository setup required once:
+
+1. Create an npm automation token or configure npm trusted publishing.
+2. Add the token as GitHub Actions secret `NPM_TOKEN` if using token-based publishing.
+
+Release flow:
+
+```bash
+npm run check
+npm run pack:cli
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow runs typecheck, build, package dry-run, and `npm publish --workspace cli --access public --provenance`.

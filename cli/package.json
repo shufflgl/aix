@@ -1,7 +1,7 @@
 {
-  "name": "aix",
+  "name": "@shufflgl/aix",
   "version": "0.1.0",
-  "description": "AI Extensions Manager CLI",
+  "description": "Agent-oriented AI Extensions Manager CLI for Codex and Claude ext assets",
   "type": "module",
   "bin": {
     "aix": "dist/index.js"
@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "commander": "^12.1.0",
@@ -26,5 +27,23 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "homepage": "https://github.com/shufflgl/aix#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shufflgl/aix.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/shufflgl/aix/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }
