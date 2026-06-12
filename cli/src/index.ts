@@ -9,6 +9,8 @@ import { listCommand } from "./commands/list.js";
 import { removeCommand } from "./commands/remove.js";
 import { secretCommand } from "./commands/secret.js";
 import { statusCommand } from "./commands/status.js";
+import { createCommand } from "./commands/create.js";
+import { promptCommand } from "./commands/prompt.js";
 
 const program = new Command();
 
@@ -23,12 +25,43 @@ addListCommand(program);
 addBuildCommand(program);
 addInstallCommand(program);
 addSecretCommand(program);
+addPromptCommand(program);
 addStatusCommand(program);
 addDoctorCommand(program);
 addRemoveCommand(program);
 addExtNamespace(program);
 
 await program.parseAsync();
+
+
+function addCreateCommand(parent: Command): void {
+  parent.command("create")
+    .argument("<extension>")
+    .option("--kind <kind>", "mcp|skill|mcp+skill", "mcp+skill")
+    .option("--runtime <runtime>", "runtime", "node")
+    .option("--description <description>")
+    .option("--target <target>", "target platform; repeatable", collect, [])
+    .option("--env <spec>", "NAME:secret:required; repeatable", collect, [])
+    .option("--force", "overwrite existing source assets")
+    .option("--dry-run", "show actions without changing files")
+    .option("--json", "emit machine-readable JSON")
+    .description("Create a standardized ext source skeleton")
+    .action((extension, options) => wrap(() => createCommand(extension, options))());
+}
+
+function addPromptCommand(parent: Command): void {
+  parent.command("prompt")
+    .argument("[kind]", "create-mcp|create-skill|import-ext", "create-mcp")
+    .argument("[extension]")
+    .option("--json", "emit machine-readable JSON")
+    .description("Print agent prompts for creating or importing ext assets")
+    .action((kind, extension, options) => wrap(() => promptCommand(kind, extension, options))());
+}
+
+function collect(value: string, previous: string[]): string[] {
+  previous.push(value);
+  return previous;
+}
 
 function addInitCommand(parent: Command): void {
   parent.command("init")
@@ -133,6 +166,7 @@ function addRemoveCommand(parent: Command): void {
 
 function addExtNamespace(parent: Command): void {
   const ext = parent.command("ext").description("Manage ext lifecycle with agent-friendly commands");
+  addCreateCommand(ext);
   addListCommand(ext);
   addBuildCommand(ext);
   addInstallCommand(ext);

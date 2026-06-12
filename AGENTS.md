@@ -59,6 +59,24 @@ Then apply only after the user confirms or explicitly requested installation:
 node cli/dist/index.js ext install gpt-image-2 --target codex --json
 ```
 
+
+## Creating and Onboarding Exts
+
+Use `ext create` to create standardized source skeletons before asking an agent to implement details:
+
+```bash
+node cli/dist/index.js ext create my-ext --kind mcp+skill --env API_KEY:secret:required --target codex --json
+node cli/dist/index.js prompt create-mcp my-ext
+```
+
+For existing local work, use the import guidance prompt:
+
+```bash
+node cli/dist/index.js prompt import-ext
+```
+
+See `docs/onboarding.md` for the full source-vs-generated onboarding workflow.
+
 ## Secrets Safety
 
 Never ask the user to paste API keys into chat. Use one of:

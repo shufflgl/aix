@@ -84,6 +84,24 @@ node cli/dist/index.js config set defaults.brandColor '#7C3AED'
 Merge precedence is platform-specific fields, then extension manifest fields, then `aix.yaml` defaults.
 
 
+
+## Creating and Onboarding Exts
+
+Use `ext create` to create standardized source skeletons before asking an agent to implement details:
+
+```bash
+node cli/dist/index.js ext create my-ext --kind mcp+skill --env API_KEY:secret:required --target codex --json
+node cli/dist/index.js prompt create-mcp my-ext
+```
+
+For existing local work, use the import guidance prompt:
+
+```bash
+node cli/dist/index.js prompt import-ext
+```
+
+See `docs/onboarding.md` for the full source-vs-generated onboarding workflow.
+
 ## Secret Backends
 
 `aix` supports three optional secret backends for aix-managed ext credentials:
