@@ -187,3 +187,8 @@ git push origin v0.1.0
 ```
 
 The workflow runs typecheck, build, package dry-run, and `npm publish --workspace cli --access public --provenance`.
+
+It also creates a GitHub Release containing:
+
+- `gpt-image-2.mcpb`: Claude Desktop extension bundle
+- `checksums.txt`: SHA-256 checksums for release assets

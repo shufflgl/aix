@@ -1,4 +1,4 @@
-name: Publish npm package
+name: Publish npm package and release artifacts
 
 on:
   push:
@@ -6,12 +6,12 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
   publish:
-    name: Publish @shufflgl/aix
+    name: Publish @shufflgl/aix and GitHub Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,13 +30,57 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build
+      - name: Build CLI
         run: npm run build
 
-      - name: Verify package contents
+      - name: Verify npm package contents
         run: npm --workspace cli pack --dry-run
 
-      - name: Publish to npm
+      - name: Publish CLI to npm
         run: npm publish --workspace cli --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Build Claude Desktop release artifacts
+        run: |
+          node cli/dist/index.js ext build gpt-image-2 --target claude-desktop --json
+          mkdir -p release-assets
+          cp dist/claude-desktop/gpt-image-2.mcpb release-assets/gpt-image-2.mcpb
+
+      - name: Create checksums
+        run: |
+          cd release-assets
+          sha256sum * > checksums.txt
+          cat checksums.txt
+
+      - name: Write release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          ## aix release
+
+          ### npm
+
+          ```bash
+          npm install -g @shufflgl/aix
+          ```
+
+          ### Artifacts
+
+          - `gpt-image-2.mcpb`: Claude Desktop extension bundle
+          - `checksums.txt`: SHA-256 checksums for release assets
+
+          ### Quick start
+
+          ```bash
+          aix ext list --json
+          aix ext install gpt-image-2 --target codex --json
+          ```
+          NOTES
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release-notes.md
+          files: |
+            release-assets/gpt-image-2.mcpb
+            release-assets/checksums.txt
